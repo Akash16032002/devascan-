@@ -16,6 +16,10 @@ from torchvision import transforms
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"message": "DevScan backend running"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -124,7 +128,9 @@ def load_ocr_model():
     return model, class_names, transform
 
 
-ocr_model, ocr_class_names, ocr_transform = load_ocr_model()
+ocr_model = None
+ocr_class_names = None
+ocr_transform = None
 
 
 # ------------------- Sloka Image Endpoint -------------------
@@ -134,6 +140,12 @@ import io
 
 @app.post("/sloka-image")
 async def sloka_from_image(file: UploadFile = File(...)):
+
+    global ocr_model, ocr_class_names, ocr_transform
+
+    if ocr_model is None:
+        ocr_model, ocr_class_names, ocr_transform = load_ocr_model()
+
     image_bytes = await file.read()
 
     # 🔥 THIS IS THE KEY FIX
